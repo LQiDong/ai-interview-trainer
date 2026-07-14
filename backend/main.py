@@ -50,7 +50,7 @@ app = FastAPI(
 _cors_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://LQiDONG.github.io",
+    "https://LQiDong.github.io",
 ]
 _frontend_url = os.getenv("FRONTEND_URL", "")
 if _frontend_url:

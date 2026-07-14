@@ -13,7 +13,7 @@ services:
       - key: API_BASE_URL
         value: https://api.deepseek.com/v1/chat/completions
       - key: FRONTEND_URL
-        value: https://LQiDONG.github.io
+        value: https://LQiDong.github.io
       - key: API_KEY
         sync: false
       - key: PYTHON_VERSION

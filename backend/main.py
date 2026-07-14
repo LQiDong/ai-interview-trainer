@@ -8,6 +8,7 @@ Run:  cd backend && uvicorn main:app --reload --port 8000
 
 from __future__ import annotations
 
+import os
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -38,8 +39,7 @@ from backend.services.evaluator import get_evaluator_service
 from backend.services.coach import get_coach_service
 from backend.services.judge import get_judge_service
 from backend.llm_client import get_llm_client
-from backend.tracer import write_trace, get_traces
-from backend.tracer import get_traces
+from backend.tracer import write_trace, get_traces, save_session_snapshot, load_session_snapshot
 
 app = FastAPI(
     title="AI 面试训练 Agent",
@@ -47,9 +47,18 @@ app = FastAPI(
     description="Multi-Agent interview training system — MVP",
 )
 
+_cors_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://LQiDONG.github.io",
+]
+_frontend_url = os.getenv("FRONTEND_URL", "")
+if _frontend_url:
+    _cors_origins.append(_frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,6 +73,20 @@ def _get_session(session_id: str) -> SessionState:
     if session_id not in sessions:
         raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
     return sessions[session_id]
+
+
+def _extract_answers(transcript: list[dict]) -> list[dict]:
+    """Extract candidate answers from interview transcript."""
+    return [
+        {
+            "round": t.get("round", i),
+            "question_id": t.get("question_id"),
+            "follow_up_depth": t.get("follow_up_depth", 0),
+            "answer": t.get("message", ""),
+        }
+        for i, t in enumerate(transcript)
+        if t.get("role") == "candidate"
+    ]
 
 
 # ── Health ───────────────────────────────────────────────────────────
@@ -516,6 +539,20 @@ async def full_pipeline(session_id: str, req: FullPipelineRequest):
         )
         session.phase = SessionPhase.COMPLETED
 
+        # Save session snapshot trace
+        await save_session_snapshot(
+            session_id=session_id,
+            jd_text=session.jd_text,
+            user_background=session.target_position,
+            questions=[q.get("question_text", "") for q in questions],
+            answers=_extract_answers(session.interview_transcript),
+            evaluations=session.evaluation_result,
+            coach_advices=session.coaching_result,
+            judge_results=session.judge_result,
+            final_report=report.model_dump() if report else {},
+            created_at=session.created_at,
+        )
+
         return FullPipelineResponse(
             session_id=session_id,
             phase=session.phase,
@@ -523,6 +560,14 @@ async def full_pipeline(session_id: str, req: FullPipelineRequest):
         )
 
     except Exception as e:
+        # Save error snapshot so the failure is traceable
+        await save_session_snapshot(
+            session_id=session_id,
+            jd_text=req.jd_text,
+            user_background=req.target_position,
+            error_info=str(e),
+            created_at=datetime.now().isoformat(),
+        )
         return FullPipelineResponse(
             session_id=session_id,
             phase="error",
@@ -534,7 +579,21 @@ async def full_pipeline(session_id: str, req: FullPipelineRequest):
 
 @app.get("/api/sessions/{session_id}/traces")
 async def get_session_traces(session_id: str):
+    """Return agent-level traces for debugging."""
     return {"session_id": session_id, "traces": get_traces(session_id)}
+
+
+@app.get("/api/sessions/{session_id}/snapshot")
+async def get_session_snapshot(session_id: str):
+    """Return the full session summary snapshot."""
+    snapshot = load_session_snapshot(session_id)
+    if snapshot is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Session snapshot not found: {session_id}. "
+                   f"The interview may not have completed yet, or the session ID is incorrect."
+        )
+    return snapshot
 
 
 # ── Eval Metrics (stub) ─────────────────────────────────────────────

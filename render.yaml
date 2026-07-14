@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ai-interview-trainer-backend
+    runtime: python
+    region: singapore
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MODEL_PROVIDER
+        value: openai
+      - key: MODEL_NAME
+        value: deepseek-chat
+      - key: API_BASE_URL
+        value: https://api.deepseek.com/v1/chat/completions
+      - key: FRONTEND_URL
+        value: https://LQiDONG.github.io
+      - key: API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0

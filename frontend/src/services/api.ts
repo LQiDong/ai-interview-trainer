@@ -8,8 +8,8 @@ import {
 } from '../mock/data'
 
 // Toggle this to switch between mock and real backend
-const USE_MOCK = true
-const API_BASE = '/api'
+const USE_MOCK = false
+const API_BASE: string = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // ── Types ──────────────────────────────────────────────────────────
 

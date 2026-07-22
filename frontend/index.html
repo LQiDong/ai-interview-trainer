@@ -7,7 +7,20 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        #app-loading{display:flex;align-items:center;justify-content:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;color:#64748b;font-size:15px;gap:10px}
+        #app-loading .dot{width:20px;height:20px;border:2.5px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:lds-spin .6s linear infinite}
+        @keyframes lds-spin{to{transform:rotate(360deg)}}
+      </style>
+      <div id="app-loading"><div class="dot"></div>加载中...</div>
+    </div>
+    <noscript>
+      <div style="padding:40px;text-align:center;font-family:sans-serif">
+        <h2>需要启用 JavaScript</h2>
+        <p>请允许浏览器运行 JavaScript 以查看此页面。</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

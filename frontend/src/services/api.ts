@@ -7,8 +7,8 @@ import {
   mockEvalDetails, mockBadcases, mockAiVsHuman,
 } from '../mock/data'
 
-// Toggle this to switch between mock and real backend
-const USE_MOCK = false
+// Static portfolio deployments opt into the built-in demo data explicitly.
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 const API_BASE: string = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // ── Types ──────────────────────────────────────────────────────────

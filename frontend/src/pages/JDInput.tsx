@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { createSession, parseJD, generateQuestions } from '../services/api'
 import Loading from '../components/Loading'
 import ErrorBanner from '../components/ErrorBanner'
@@ -22,8 +22,9 @@ const SAMPLE_JD = `【岗位】AI产品经理（Agent方向）
 
 export default function JDInput() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [jdText, setJdText] = useState('')
-  const [targetPosition, setTargetPosition] = useState('')
+  const [targetPosition, setTargetPosition] = useState(searchParams.get('role') || '')
   const [phase, setPhase] = useState<Phase>('input')
   const [error, setError] = useState('')
   const [jobProfile, setJobProfile] = useState<any>(null)
@@ -74,8 +75,9 @@ export default function JDInput() {
   return (
     <div>
       <div className="page-header">
-        <h1>开始面试训练</h1>
-        <p>粘贴目标岗位的 JD，AI 将自动解析并生成定制化面试题</p>
+        <span className="page-kicker">创建训练</span>
+        <h1>用目标岗位，生成你的专属面试</h1>
+        <p>选择岗位方向并粘贴 JD。信息越完整，问题和评价标准越贴近真实招聘。</p>
       </div>
 
       {error && (
@@ -87,8 +89,8 @@ export default function JDInput() {
       {/* Phase: Input */}
       {(phase === 'input' || phase === 'error') && (
         <div className="card">
-          <div className="card-header">
-            <h3>输入 JD</h3>
+          <div className="card-header jd-card-header">
+            <div><h3>岗位信息</h3><p>通常 30 秒内完成分析和出题</p></div>
             <button className="btn btn-sm btn-secondary" onClick={useSample}>
               填入示例 JD
             </button>
@@ -106,6 +108,9 @@ export default function JDInput() {
               <option value="AI产品经理">AI 产品经理</option>
               <option value="AI产品运营">AI 产品运营</option>
               <option value="Agent产品经理">Agent 产品经理</option>
+              <option value="Agent 开发工程师">Agent 开发工程师</option>
+              <option value="产品经理">产品经理</option>
+              <option value="全栈工程师">全栈工程师</option>
             </select>
           </div>
 
@@ -133,7 +138,7 @@ export default function JDInput() {
             onClick={handleSubmit}
             disabled={!jdText.trim()}
           >
-            解析 JD 并生成面试题 →
+            生成专属面试题 →
           </button>
         </div>
       )}
